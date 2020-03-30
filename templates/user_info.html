@@ -1,0 +1,446 @@
+{% extends 'blog2.html' %}
+{% load staticfiles %}
+{% load comment_tags %}
+{% load likes_tags %}
+{% load qq_tags %}
+ {% load notifications_tags %}
+{% load get_blog_avatar %}
+{% block center-block %}
+<section class="content profile-page">
+    <!--内容主题-->
+    <div class="block-header">
+        <div class="row">
+            <div class="col-lg-7 col-md-6 col-sm-12">
+                <h2>宇航员的个人博客 <small>"直到有一天他向我跑来,叫住了我的名字, 那一刻,我漫长的等待结束了。"</small></h2>
+            </div>
+            <div class="col-lg-5 col-md-6 col-sm-12">
+                <ul class="breadcrumb float-md-right">
+                    <li class="breadcrumb-item"><a><i class="zmdi zmdi-home"></i> home</a></li>
+                    <li class="breadcrumb-item active">个人空间</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!--内容-->
+    <div class="container-fluid">
+        <div class="row clearfix">
+            <!--左上-->
+            <div class="col-xl-6 col-lg-7 col-md-12">
+                <div class="card profile-header">
+                    <div class="body">
+                        <div class="row">
+                            <div class="col-lg-4 col-md-4 col-12">
+                                <div class="profile-image float-md-right"> <img src="{{ user.profile.avatar.url }}" alt=""> </div>
+                            </div>
+                            <div class="col-lg-8 col-md-8 col-12">
+                                <h4 class="m-t-0 m-b-0"><strong>{{ user.username }}</strong></h4>
+                                <span class="job_post">{{ user.profile.nickname }}</span>
+                                 {% if user.email %}
+                                <p>邮箱:{{ user.email }}</p>
+                                {% else %}
+                                <p>邮箱:未绑定&nbsp;<a href="{% url 'edit' user.pk %}">绑定邮箱</a></p>
+                                {% endif %}
+                                {% if user.is_staff or user.is_superuser %}
+                                <p><a href="{% url 'admin:index' %}">后台管理</a></p>
+                                {% endif %}
+                                <p>上次登陆时间:{{ user.last_login|date:"Y-m-d H:i:s" }}</p>
+                                <div>
+                                    <button class="btn btn-primary btn-round btn-simple"><a href="{% url 'edit' user.pk %}">修改资料卡</a></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+             <!--右上-->
+           <div class="col-lg-6 col-md-12">
+                <div class="card">
+                    <div class="body">
+                    <div id="demo2" class="carousel slide" data-ride="carousel">
+                        <!-- Indicators -->
+                        <ul class="carousel-indicators">
+                            <li data-target="#default100}" data-slide-to="d100" class="active"></li>
+                             {% for blog in hot_blogs %}
+                             {%  get_blog_avatar_url blog as e %}
+                            {% if e %}
+                        <li data-target="#demo{{ blog.pk }}" data-slide-to="{{ blog.pk }}" class="" ></li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+
+                        <!-- Wrapper for slides -->
+                      <div class="carousel-inner">
+                       <div class="carousel-item active">
+                            <img src="{% static 'assets/images/mylog.png' %}" class="img-fluid" alt="">
+                            <div class="carousel-caption">
+                            <h3>热门博客推荐</h3>
+                            <p>.....</p>
+                            </div>
+                        </div>
+                      {% for blog in hot_blogs %}
+                        {%  get_blog_avatar_url blog as e %}
+                        {% if e %}
+                        <div class="carousel-item">
+                            <img src="{{ e }}" class="img-fluid" alt="">
+                            <div class="carousel-caption">
+                            <h3><a href="{% url 'blog_detail' blog.object_id %}">{{ blog.content_object|truncatechars:'5' }}</a></h3>
+                            <p>{% get_blog_for_hotblog blog as b %}{{ b.content|truncatechars:'20'|safe|striptags }}...</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                     {% endfor %}
+                        </div>
+                        <!-- Controls -->
+                        <!-- Left and right controls -->
+                        <a class="carousel-control-prev" href="#demo2" data-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                        </a>
+                        <a class="carousel-control-next" href="#demo2" data-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                        </a>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row clearfix">
+            <!--左下-->
+            <!--右下-->
+            <div class="col-lg-12 col-md-12 ">
+                    <div class="card">
+                    <ul class="nav nav-tabs">
+                        {% if user.is_superuser %}
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#myheart100">我的收藏</a></li>
+                        <li class="nav-item"><a class="nav-link " data-toggle="tab" href="#mypost100">发布博客</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#myblog100">我的博客</a></li>
+                        {% else %}
+                         <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#myheart100">我的收藏</a></li>
+                        {% endif %}
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#mynotice100">我的消息</a></li>
+                    </ul>
+                </div>
+                    <div class="tab-content">
+                    {% if user.is_superuser %}
+                    <div role="tabpanel" class="tab-pane" id="mypost100">
+                        <div class="card">
+                            <div class="body">
+                           <form class="form-horizontal" method="POST" enctype="multipart/form-data" di="postform">
+                           <div class="clearfix row">
+                            {% csrf_token %}
+                            {% for feild in article_form %}
+                                {% if not feild.is_hidden %}
+                                 <div class="col-lg-2 col-md-2 col-sm-4 form-control-label">
+                                    <label for="{{ feild.id_for_label }}">{{ feild.label }}: </label>
+                                 </div>
+                                  <div class="col-lg-10 col-md-10 col-sm-8">
+                                    <div class="form-group">{{ feild }}</div>
+                                  </div>
+                                {% endif %}
+                            {% endfor %}
+                           </div>
+                                <div class="post-toolbar-b">
+                                    <div class="clearfix row" >
+                                        <div class="col-lg-4 offset-2">
+                                             <button type="button" class="btn btn-warning btn-icon  btn-icon-mini btn-round" title="上传图片" id="post_picture"><i class="zmdi zmdi-camera"></i></button>
+                                            <span id="picture_name">未选择文件</span>
+                                            <button  type="button" class="btn btn-primary btn-round " id="reset_picture">重置</button>
+                                        </div>
+                                        <div class="col-lg-4 offset-2">
+                                             <button class="btn btn-primary btn-round float-right btn-lg">Post</button>
+                                        </div>
+                                    </div>
+                                </div>
+                           </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div  role="tabpanel" class="card tab-pane" id="myblog100">
+                        <div class="header">
+                            <h2>我的博客列表 </h2>
+                        </div>
+                        <div class="body">
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-striped table-hover js-basic-example dataTable ">
+                                    <thead>
+                                        <tr>
+                                            <th>标题</th>
+                                            <th>发布时间</th>
+                                            <th>类型</th>
+                                            <th>作者</th>
+                                            <th>阅读量</th>
+                                            <th>评论数</th>
+                                            <th>收藏数</th>
+                                            <th>点赞数</th>
+                                            <th>编辑</th>
+                                            <th>删除</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                           {% for personal_blog in personal_blog_list %}
+                                                <tr id="personal_blog_{{ personal_blog.pk }}" class="personal_blog_item">
+                                                    <th nowrap="nowrap"><a href="{% url 'blog_detail' personal_blog.pk %}">{{ personal_blog.title }}</a></th>
+                                                    <th nowrap="nowrap"><span class="col-green">{{ personal_blog.created_time }}</span></th>
+                                                    <th nowrap="nowrap"><span class="col-orange">{{ personal_blog.blog_type }}</span></th>
+                                                    <th nowrap="nowrap"><span class="col-blue">{{ personal_blog.author }}</span></th>
+                                                    <th nowrap="nowrap">{{ personal_blog.get_read_num }}</th>
+                                                    <th nowrap="nowrap">{% get_comment_count personal_blog %}</th>
+                                                    <th nowrap="nowrap">{% get_collect_count personal_blog %}</th>
+                                                    <th nowrap="nowrap">{% get_likes_count personal_blog%}</th>
+                                                    <th nowrap="nowrap"><a href="{% url 'update_blog' personal_blog.pk %}?from={{ request.get_full_path }}">编辑</a></th>
+                                                    <th nowrap="nowrap"><a onclick="delete_blog({{ personal_blog.pk }});" >删除</a></th>
+                                                </tr>
+                                            {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                   <div role="tabpanel" class="tab-pane active" id="myheart100">
+                                 <div class="card product_item_list">
+                                     <div class="body table-responsive">
+                                                <table class="table table-hover m-b-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>文章名称</th>
+                                                            <th>分类</th>
+                                                            <th data-breakpoints="sm xs">收藏时间</th>
+                                                            <th data-breakpoints="sm xs md">收藏量</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                     {% for i in collect_list %}
+                                                        {% if i.content_object %}
+                                                        <tr>
+                                                            <td><a href="{% url 'blog_detail' i.content_object.pk %}">{{ i.content_object }} </a></td>
+                                                            <td> <a href="{% url 'blog_with_type' i.content_object.blog_type.id %}" class="text-muted">{{ i.content_object.blog_type }}</a></td>
+                                                            <td><span class="col-green">{{ i.collect_time }}</span></td>
+                                                            <td>
+                                                                <div class="collect" onclick="collectChange(this,'{% get_content_type i.content_object %}',{{ i.content_object.pk }})">
+                                                                    <span class="collect_status zmdi zmdi-star {% get_collect_status user i.content_object %}"></span>
+                                                                    <span class="collect_num">{% get_collect_count i.content_object %}</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                </div>
+                                 <!--分页器-->
+                                <div class="card">
+                                    <div class="body">
+                                        <ul class="pagination pagination-primary m-b-0">
+                                            {% if page_of_blogs.has_previous %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ page_of_blogs.previous_page_number }}"><i class="zmdi zmdi-arrow-left"></i></a></li>
+                                             {% endif %}
+                                             {% for page_num in page_range %}
+                                                {% if page_num == current_page_num %}
+                                                    <li class="page-item active"><a class="page-link">{{ page_num }}</a></li>
+                                                {% else %}
+                                                    {% if page_num == '...' %}
+                                                             <li class="page-item"><a class="page-link">...</a></li>
+                                                    {% else %}
+                                                            <li class="page-item"><a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a></li>
+                                                     {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                              {% if page_of_blogs.has_next %}
+                                            <li class="page-item"><a class="page-link" href="?page= {{ page_of_blogs.next_page_number }}"><i class="zmdi zmdi-arrow-right"></i></a></li>
+                                             {% endif %}
+                                        </ul>
+                                    </div>
+                                </div>
+                    </div>
+                   <div role="tabpanel" class="tab-pane" id="mynotice100">
+                                {% if all_msg %}
+                                 <div class="card product_item_list">
+                                     <div class="body table-responsive">
+                                                <table class="table table-hover m-b-0">
+                                                    <thead>
+                                                        <tr>
+                                                            <th width="80%">{{ num }}条消息</th>
+                                                            <th width="20%"><a href="{% url 'dealwith' %}">一键清空</a></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+
+                                                        {% for i in all_msg %}
+                                                       <tr>
+                                                        <th> <span class="col-orange">[{{ i.actor }}]</span>,在[文章]
+                                                            {% if i.target %}
+                                                            <a href="{% url 'blog_detail' i.target.id %}" > {{ i.target|truncatechars:'8'|safe }}...</a>
+                                                             {% else %}
+                                                             <a> {{ i.target|truncatechars:'8'|safe }}...</a>
+                                                            {% endif %}
+                                                            <span>{{ i.recipient }}: {{ i.action_object|striptags|truncatechars:'50' }} <br><span  class="col-blue">回复到:{{ i.verb|striptags  }}</span></span>
+                                                        </th>
+                                                         <th><span class="col-red"><a href="{% url 'dealwith' %}?msg_id={{ i.id }}" >清除</a></span></th>
+                                                       </tr>
+                                                        {% endfor %}
+                                                    </tbody>
+                                                </table>
+                                      </div>
+                                </div>
+                                {% else %}
+                                    <div class="card">
+                                        <div class="body">
+                                            <p class="col-green">*暂时无消息</p>
+                                         </div>
+                                    </div>
+                              {% endif %}
+                    </div>
+                    </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block script_area %}
+ <style>
+
+.django-ckeditor-widget{
+    width: 100%!important;
+    overflow: scroll!important;
+}
+#id_avatar{
+    max-width: 2.375rem;
+    min-width: 2.375rem;
+    max-height: 2.375rem;
+    min-height: 2.375rem;
+    opacity: 0;
+
+}
+#post_picture{
+    position: relative;
+    margin-top: -86px;
+
+}
+ #picture_name{
+   display: inline-block;
+    border: solid 1px #9E9E9E;
+    padding: 5px;
+    position: absolute;
+    color: green;
+    margin-top: -39px;
+ }
+ </style>
+<script src="{% static 'assets/bundles/datatablescripts.bundle.js' %}"></script>
+<script src="{% static 'assets/js/pages/tables/jquery-datatable.js' %}"></script>
+<script>
+
+
+ $('#id_title').addClass('form-control')
+ $('#id_blog_type').addClass('form-control')
+ $('#id_content').addClass('form-control')
+ $('#id_avatar').addClass('form-control')
+
+ //点击图标触发上传文件
+ $('#post_picture').click(function () {
+     $('#id_avatar').trigger('click');
+ })
+ //动态更新文件名
+ $(function () {
+     $('#id_avatar').change(function () {
+        var is_picture_name=document.getElementById('id_avatar') .files[0]
+         if (is_picture_name){
+            var picture_name=is_picture_name.name
+             $('#picture_name').text(picture_name)
+         }else{
+             $('#picture_name').text('未选择文件')
+         }
+     })
+
+ })
+ //重置配图
+ $('#reset_picture').click(function () {
+     var is_picture_name=document.getElementById('id_avatar') .files[0]
+     if(is_picture_name){
+      var file = $('#id_avatar');
+        file.val("");
+        $('#picture_name').text('未选择文件');
+       }
+     return false;
+
+ })
+//删除博客
+ function delete_blog(pk) {
+     new $.flavr(
+         {
+             content: "Are you sure delete the blog?",
+             dialog:'confirm',
+             onConfirm:function () {
+                 $.ajax({
+               url:'{% url 'delete_blog' %}',
+               type:'GET',
+               data:{
+                   pk:pk
+               },
+                cache:false,
+                success:function (data) {
+                    if(data['status']=='SUCCESS'){
+                        var html01='删除成功'
+                    new $.flavr({content: html01,autoclose:true,timeout:5000})
+                        $('#personal_blog_'+pk).remove();
+                    }else{
+                         var html02='操作失败(可能已经删除)'
+                    new $.flavr({content: html02,autoclose:true,timeout:5000});
+                    }
+                },
+                complete:function (xhr) {
+                    xhr=null;
+                }})
+               return false;
+             },autoclose:true,timeout:5000
+         });
+    };
+ //收藏操作
+ function collectChange(obj, content_type, object_id) {
+        var is_collect = obj.getElementsByClassName('active').length == 0
+        $.ajax({
+            url: '{%  url 'collect_change' %}',
+            type: 'GET',
+            data: {
+                content_type: content_type,
+                object_id: object_id,
+                is_collect: is_collect,
+            },
+            cache: false,
+            success: function (data) {
+                console.log(data)
+                if (data['status'] == 'SUCCESS') {
+                    //更新收藏状态
+                    var element = $(obj.getElementsByClassName('collect_status'));
+
+                    if (is_collect) {
+                        element.addClass('active');
+                         new $.flavr("收藏成功!")
+                    } else {
+                        element.removeClass('active');
+                         new $.flavr("取消收藏成功!")
+
+                    }
+                    //更新收藏数量
+                    var collect_num = $(obj.getElementsByClassName('collect_num'));
+
+                    collect_num.text(data['collect_num']);
+                } else {
+                    if (data['code'] == 400) {
+                        $('#login_modal').modal('show');
+                    } else {
+                         new $.flavr(data['message']);
+                    }
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr)
+            }
+        })
+    }
+
+
+</script>
+
+{% endblock %}

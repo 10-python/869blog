@@ -1,0 +1,655 @@
+{% extends 'blog2.html' %}
+{% load staticfiles %}
+{% load comment_tags %}
+{% load likes_tags %}
+{% load qq_tags %}}
+{% load get_blog_avatar %}
+
+{% block title %}
+<li class="deatail-blog-btitle">{{ blog.title }}</li>
+<li class="float-right"> <a onclick="likeChange(this,'{% get_content_type blog %}',{{ blog.pk }})" title="点赞"><i class="zmdi zmdi-thumb-up zmdi-thumb-up-title {% get_like_status user blog %} show-zmdi " ></i></a></li>
+ <li class="float-right"> <a onclick="collectChange(this,'{% get_content_type blog %}',{{ blog.pk }})" title="收藏"><i class="zmdi zmdi-star  {% get_collect_status user blog %} collect_status show-zmdi zmdi-star-title"></i></a></li>
+{% endblock %}
+{% block center-block %}
+<!--block main-center-->
+<section class="content ecommerce-page">
+    <!--本页主题-->
+    <div class="block-header">
+        <div class="row">
+            <div class="col-lg-12">
+                 <h2>宇航员的个人博客 <small>"直到有一天他向我跑来,叫住了我的名字, 那一刻,我漫长的等待结束了。"</small></h2>
+            </div>
+            <div class="col-lg-12 ">
+                <ul class="breadcrumb float-md-right ">
+                {% if first_blog %}
+                <li class="breadcrumb-item">
+                    <a  href="{% url 'blog_detail' first_blog.id %}">{{ first_blog.title }}<span class="zmdi zmdi-arrow-left"></span></a>
+                </li>
+                {% endif %}
+                <li class="breadcrumb-item active">{{ blog.title }}</li>
+                {% if last_blog %}
+                 <li class="breadcrumb-item"><a href="{% url 'blog_detail' last_blog.id %}"><span class="zmdi zmdi-arrow-right"></span>{{ last_blog.title}}</a></li>
+                {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!--本页内容-->
+    <div class="container-fluid">
+        <div class="row clearfix">
+            <div class="col-lg-12">
+                <div class="card">
+                    <div class="body">
+                        <div class="row">
+                        {% if blog.avatar %}
+                            <div class="preview col-lg-4 col-md-12">
+                                <div class="preview-pic tab-content">
+                                {% if user == blog.author %}
+                                    <div class="tab-pane active" id="product_{{ blog.pk }}"  title="{{ blog.title }}" ><a href="{% url 'update_blog' blog.pk %}"><img src="{{ blog.avatar.url }}" /></a></div>
+                                {% else %}
+                                    <!--当前博客-->
+                                    <div class="tab-pane active" id="product_{{ blog.pk }}"  title="{{ blog.title }}" ><img src="{{ blog.avatar.url }}" /></div>
+                                {% endif %}
+                                    <!--热门博客-->
+                                    {% for blog in hot_blogs %}
+                                        {% get_blog_avatar_url blog as e %}
+                                         {% if e %}
+                                         <div class="tab-pane" id="product_{{ blog.object_id }}" title="{{ blog.content_object }}"><a href="{% url 'blog_detail' blog.object_id %}"><img src="{% get_blog_avatar_url blog %}" /></a></div>
+                                         {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <ul class="preview-thumbnail nav nav-tabs">
+                                     <li class="nav-item" ><a class="nav-link active" data-toggle="tab" href="#product_{{ blog.pk }}"><img src="{{ blog.avatar.url }}" title="{{ blog.pk }}"/></a></li>
+                                      {% for blog in hot_blogs %}
+                                        {% get_blog_avatar_url blog as e %}
+                                         {% if e %}
+                                    <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#product_{{ blog.object_id }}"><img src="{% get_blog_avatar_url blog %}"  title="{{ blog.content_object }}"/></a></li>
+                                         {% endif %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+                            <div class="details col-lg-8 col-md-12">
+                                <h3 class="product-title m-b-0">{{ blog.title }}</h3>
+                                <h5 class="m-t-0"><span class="badge badge-primary">分类:</span>&nbsp;<a href="{% url 'blog_with_type' blog.blog_type.id %}"><span class="badge badge-default">{{ blog.blog_type }}</span></a></h5>
+                                <h5 class="m-t-0"><span class="badge badge-primary">日期:</span>&nbsp;<a><span class="badge badge-default">{{ blog.created_time|date }}</span></a></h5>
+                                <p class="product-description">{{ blog.content|striptags|safe }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="row clearfix">
+                    <div class="col-lg-12">
+                        <div class="card">
+                            <ul class="row profile_state list-unstyled">
+                                <li class="col-lg-3 col-md-3 col-6">
+                                    <div class="body">
+                                        <i class="zmdi zmdi-eye col-amber"></i>
+                                        <h4>{{ blog.get_read_num }}</h4>
+                                        <span>浏览</span>
+                                    </div>
+                                </li>
+                                <li class="col-lg-3 col-md-3 col-6">
+                                    <div class="body">
+                                        <a onclick="likeChange(this,'{% get_content_type blog %}',{{ blog.pk }})"><i class="zmdi zmdi-thumb-up zmdi-thumb-up-blog   {% get_like_status user blog %}" ></i>
+                                        <h4 ><span class="like_num ">{% get_likes_count blog %}</span></h4></a>
+                                        <span>点赞</span>
+                                    </div>
+                                </li>
+                                <li class="col-lg-3 col-md-3 col-6">
+                                    <div class="body">
+                                        <a onclick="to_open_comment()"><i class="zmdi zmdi-comment-text col-red"></i>
+                                        <h4 class="comment_num">{% get_comment_count blog %}</h4></a>
+                                        <span>评论</span>
+                                    </div>
+                                </li>
+                                <li class="col-lg-3 col-md-3 col-6">
+                                    <div class="body">
+                                        <a onclick="collectChange(this,'{% get_content_type blog %}',{{ blog.pk }})"><i class="zmdi zmdi-star  {% get_collect_status user blog %} collect_status"></i>
+                                        <h4 class="collect_num">{% get_collect_count blog %}</h4></a>
+                                        <span>收藏</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <ul class="nav nav-tabs">
+                        <li class="nav-item"><a class="nav-link " data-toggle="tab" href="#commentlist100" id="to-comment-list">全部评论(<span id="comment-num">{% get_comment_count blog %}</span>)</a></li>
+                        <li class="nav-item"><a class="nav-link active "  id="to-comment-form" onclick="to_open_comment();">我要评论</a></li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="body">
+                        <div class="tab-content">
+
+                            <div class="tab-pane active" id="commentlist100">
+                                <div class="blog-comment-content ">
+                                        <div class="media-list box-shadow " id="comment_list">
+                                            {% get_comment_list blog as comments %}
+                                            {% for comment in comments %}
+                                            <div class="media mleft comment_item" id="root_{{ comment.pk }}">
+                                                <div class="media-left">
+                                                     {% if comment.user.profile.avatar %}
+                                                   <a> <img class="media-object" src="{{ comment.user.profile.avatar.url }}" width="64" height="64" alt=""></a>
+                                                    {% else %}
+                                                    <a> <img class="media-object" src="http://placehold.it/64x64" width="64" height="64" alt="用户{{  comment.user.id}}" >{{  comment.user.id}}</a>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="media-body">
+                                                    <h4 class="media-heading">{{ comment.user.username }}({{ comment.comment_time|date:"Y-m-d" }})
+                                                        <div style="float: right;display: inline-block">
+                                                           <ul class="header-dropdown">
+                                                                <li class="dropdown">
+                                                                     {% is_user request.user comment.user  as delete%}
+                                                                        {% if delete == '' %}
+                                                                        <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> <i class="zmdi zmdi-more"></i> </a>
+                                                                        <ul class="dropdown-menu dropdown-menu-right slideUp float-right">
+                                                                            <li> <a  onclick="delete_comment({{ comment.pk }},'#root_')">删除</a></li>
+                                                                        </ul>
+                                                                        {% else %}
+                                                                             <a style="color: lightgrey"> <i class="zmdi zmdi-more"></i> </a>
+                                                                        {% endif %}
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </h4>
+
+                                                    <div id="comment_{{ comment.pk }}"><span  class="comment_text_{{ comment.pk }}">{{ comment.text|safe }}</span></div>
+                                                     <div class="comment_footer">
+                                                       <span class="like" onclick="likeChange(this,'{% get_content_type comment %}',{{ comment.pk }})">
+                                                            <span class=" fa fa-a-c-up   "><i class=" zmdi zmdi-thumb-up {% get_like_status user comment %}"></i></span>
+                                                            <span class="like_num">{% get_likes_count comment %}</span>
+                                                      </span>
+                                                        <a class="reload" href="javascript:reply({{ comment.pk }});">回复</a>
+                                                        {% get_reply_count comment blog as reply_count %}
+                                                         {% if reply_count %}
+                                                        <a class="badge badge-primary" data-toggle="collapse" data-target="#collapse{{ comment.pk }}" aria-expanded="false" aria-controls="collapseExample">{% get_reply_count comment blog %}</a>
+                                                         {% endif %}
+                                                    </div>
+                                                    <div class="collapse" id="collapse{{ comment.pk }}">
+                                                            <div class="well">
+                                                                {% for reply in comment.root_comment.all %}
+                                                                <div class="media m-t-20 reply_item" id="root_reply_{{ reply.pk }}">
+                                                        <div class="media-left">
+                                                              {% if reply.user.profile.avatar %}
+                                                            <a><img alt="{{ reply.user.username }}" class="media-object" src="{{ reply.user.profile.avatar.url }}" width="64" height="64"></a>
+                                                            {% else %}
+                                                              <a><img alt="用户{{ reply.user.id }}" class="media-object" src="http://placehold.it/64x64" width="64" height="64"></a>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="media-body">
+                                                            <h4 class="media-heading">{{ reply.user.username }}({{ reply.comment_time|date:'Y-m-d' }})回复:{{ reply.reply_to.username }}:</h4>
+                                                            <div id="comment_{{ reply.pk }}">
+                                                                 <span class="comment_text_{{ reply.pk }}">  {{ reply.text|safe }}</span>
+                                                            </div>
+                                                             <div class="comment_footer">
+                                                                <a  onclick="delete_comment({{ reply.pk }},'#root_reply_')" class="{% is_user request.user reply.user %}">删除</a>
+                                                                 <span class="like" onclick="likeChange(this,'{% get_content_type reply %}',{{ reply.pk }})">
+                                                                    <span class=" fa fa-a-c-up   "><i class="zmdi zmdi-thumb-up {% get_like_status user reply %}"></i></span>
+                                                                    <span class="like_num">{% get_likes_count reply %}</span>
+                                                                 </span>
+                                                                <a href="javascript:reply({{ reply.pk }});">回复</a>
+                                                            </div>
+                                                         </div>
+                                                    </div>
+                                                                {% endfor %}
+                                                            </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                             {% empty %}
+                                                <h4 id="no_comment">还没有评论哟,赶快抢占沙发吧!</h4>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</section>
+
+<!-- auncher -->
+<div class="chat-launcher"></div>
+<div class="chat-wrapper " style="max-height: 80%;overflow-y: auto; border-radius: 14px;border:solid lightgrey 1px;">
+    <div class="card">
+        <div class="header">
+            {% if user.is_authenticated %}
+            <div class="media mleft">
+                <div class="media-left">
+                    {% if user.profile.avatar %}
+                    <a href="{% url "user_info" %}"> <img class="media-object" src="{{ user.profile.avatar.url }}" width="64" height="64" alt=""style="border-radius: 14px;"> </a>
+                    {% else %}
+                         <a><img alt="用户{{ user.pk }}" class="media-object" src="http://placehold.it/64x64" width="64" height="64"></a>
+                    {% endif %}
+                </div>
+                <div class="media-body">
+                    <h4 class="media-heading"><a href="{% url "user_info" %}">{{ user.username }}</a></h4>欢迎评论!
+                </div>
+            </div>
+             {% endif %}
+        </div>
+        <div class="body">
+            <div class="tab-pane " id="commentform100">
+                 <div class="body">
+                      <div class="comment_area ">
+                        {% if user.is_authenticated %}
+                            <form id="comment_form" action="{% url 'commit' %}" method="POST"class="box-shadow">
+                                <div id="reply_content_containter" style="display:none;margin-bottom: 10px ">
+                                     <p id="reply_title">回复:</p>
+                                    <pre class="prettyprint slim_scroll">
+                                     <div id="reply_content"></div></pre>
+                                     <div id="del_reply"><p style="margin-top: 10px">取消回复</p></div>
+                                     <div class="clearfix"></div>
+                                </div>
+                                {% csrf_token %}
+                                {% get_comment_form blog as v %}
+                                {{ v }}
+                                <span id="comment_error" class="text-danger" style="display:inline-block;font-weight: bold;margin-left: 10px;padding: 10px"></span>
+                                <input type="submit" class="btn btn-primary btn-round waves-effect m-t-20 float-right" value="提交" >
+                            </form>
+
+                        {% else %}
+                            <div style="color: white">
+                                <strong class="col-purple" style="line-height: 38px;">未登录,登录之后方可评论!</strong>
+                               <a onclick="open_form();" class="btn btn-primary btn-round waves-effect float-right">登录</a>
+                            </div>
+
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+<!-- Jquery Core Js -->
+{% block script_area %}
+    <!--设置滚动条样式-->
+    <style>
+
+
+
+
+    </style>
+    <style>
+        .chat-launcher {
+            background-color: #ec3b57;
+
+            }
+        .django-ckeditor-widget{
+        width: 100%;
+        }
+        #cke_id_content{
+        width: 100%!important;
+
+        }
+        span.zmdi-star.active,span.zmdi-thumb-up.active,i.zmdi-star.active,i.zmdi-thumb-up.active{
+          color: #ec3b57;
+        }
+        pre.prettyprint {
+        background-color: #8c99e0;
+        border: 0px;
+        margin: 0;
+        padding: 0px 20px;
+        text-align: left;
+    }
+    #to-comment-form{
+        display: none;
+    }
+.deatail-blog-btitle{
+    color: white;
+    margin-left: 50px;
+    font-weight: bold;
+    font-size: large;
+}
+    .show-zmdi{
+        color: white;
+        font-size: x-large;
+        display: none;
+    }
+
+    </style>
+    <script>
+    function reply_to_position(){
+    $('html').animate({scrollTop: $("#comment_form").offset().top - 60}, 300, function () {
+            CKEDITOR.instances['id_text'].focus();
+        });
+}
+
+    String.prototype.format = function () {
+    var str = this
+    for (var i = 0; i < arguments.length; i++) {
+        var str = str.replace(new RegExp('\\{' + i + '\\}', 'g'), arguments[i])//正则表达式
+    }
+    ;
+    return str;
+    };
+    function to_open_comment(){
+         $('.chat-wrapper').addClass('chat-wrapper');
+        $('.chat-wrapper').addClass('is-open pullUp');
+    }
+    $('.chat-launcher').click(function () {
+        $('#comment_error').text('');
+    })
+
+
+    $("#comment_form").submit(function () {
+        //判断为空
+        if (CKEDITOR.instances['id_text'].document.getBody().getText().trim() == '') {
+            $('#comment_error').text('评论内容不能为空');
+            return false;
+        } else {
+            $('#comment_error').text('');
+        }
+        //更新数据到textarea
+        CKEDITOR.instances['id_text'].updateElement();
+        //异步提交
+        $.ajax(
+            {
+                url:{% url 'commit' %},
+                type: 'POST',
+                data: $(this).serialize(),
+                cache: false,
+                success: function (data) {
+                    console.log(data)
+
+                    //插入数据
+                    if (data['status'] == 'SUCCESS') {
+                        if ($('#reply_comment_id').val() == "0") {
+                            //插入评论
+                            var comment_html = '<div class="media mleft comment_item" id="root_{0}">\n' +
+                                '    <div class="media-left">\n' +
+                                    '       <a> <img class="media-object" src="{5}" width="64" height="64" alt="{1}"></a>\n'    +
+                                '    </div>\n' +
+                                '    <div class="media-body">\n' +
+                                '<h4 class="media-heading">{1}({2})' +
+                                     ' <div style="float: right;display: inline-block">\n' +
+                                         '   <ul class="header-dropdown">\n' +
+                                             '   <li class="dropdown">\n' +
+                                                ' <a href="javascript:void(0);" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> <i class="zmdi zmdi-more"></i> </a>\n' +
+                                                  '<ul class="dropdown-menu dropdown-menu-right slideUp float-right">\n' +
+                                                       '<li><a  onclick="delete_comment({0},\'#root_\')">删除</a>\n</li>\n' +
+                                                '</ul>\n' +
+                                             ' </li>\n' +
+                                          '</ul>\n' +
+                                     ' </div>'+
+                                '</h4>\n' +
+                                '        <div id="comment_{0}"><span  class="comment_text_{0}">{3}</span></div>\n' +
+                                '         <div class="comment_footer">\n' +
+                                '           <span class="like" onclick="likeChange(this,\'{4}\',{0})">\n' +
+                                '                <span class=" fa fa-a-c-up"><i class=" zmdi zmdi-thumb-up "></i></span>\n' +
+                                '                <span class="like_num">0</span>\n' +
+                                '          </span>\n' +
+                                '            <a class="reload" href="javascript:reply({0});">回复</a>\n' +
+                                '        </div>\n' +
+                                '    </div>\n' +
+                                '</div>'
+                            comment_html = comment_html.format(data['pk'], data['username'], data['comment_time'], data['text'], data['content_type'],data['picture_url']);
+                            $("#comment_list").prepend(comment_html);
+                            $("#comment_error").text('评论成功');
+
+
+                        } else {
+                            //插入回复
+                            var reply_html ='<div class="media m-t-20 reply_item" id="root_reply_{3}">\n' +
+                                '    <div class="media-left">\n' +
+                                    '        <a><img alt="{0}" class="media-object" src="{6}" width="64" height="64"></a>\n' +
+                                '    </div>\n' +
+                                '    <div class="media-body">\n' +
+                                '        <h4 class="media-heading">{0}({1})回复:{2}:</h4>\n' +
+                                '        <div id="comment_{3}">\n' +
+                                '             <span class="comment_text_{3}">  {4}</span>\n' +
+                                '        </div>\n' +
+                                '         <div class="comment_footer">\n' +
+                                '            <a  onclick="delete_comment({3},\'#root_reply_\')">删除</a>\n' +
+                                '             <span class="like" onclick="likeChange(this,\'{5}\',{3})">\n' +
+                                '                <span class=" fa fa-a-c-up"><i class="zmdi zmdi-thumb-up"></i></span>\n' +
+                                '                <span class="like_num">0</span>\n' +
+                                '             </span>\n' +
+                                '            <a href="javascript:reply({3});">回复</a>\n' +
+                                '        </div>\n' +
+                                '     </div>\n' +
+                                '</div> '
+                            reply_html = reply_html.format(data['username'], data['comment_time'], data['reply_to'], data['pk'], data['text'], data['content_type'],data['picture_url'])
+                            $("#comment_" + data['root_pk']).append(reply_html);
+                            $("#comment_error").text('回复成功');
+                        }
+
+                        //清空编辑框内容
+                        CKEDITOR.instances['id_text'].setData('');
+                        $("#reply_content_containter").hide();
+                        $('#reply_comment_id').val('0');
+                        $('#no_comment').remove();
+                        //评论加1
+                        var num=$('#comment-num').text();
+                        num=Number(num);
+                        num=num+1;
+                        num=String(num)
+                        $('#comment-num').text(num);
+
+
+                    } else {
+                        //显示错误信息
+                        $('#comment_error').text(data['message']);
+                    }
+
+                },
+                error: function (xhr) {
+                    console.log(xhr)
+                }
+            }
+        );
+        return false;
+    });
+    $('#del_reply').click(function () {
+        CKEDITOR.instances['id_text'].setData('');
+        $("#reply_content_containter").hide();
+        $('#reply_comment_id').val('0');
+    })
+
+    function reply(reply_comment_id) {
+        //设置值
+
+        try {
+            $('#reply_comment_id').val(reply_comment_id);
+            var html = $(".comment_text_" + reply_comment_id).html();
+            $('#reply_content').html(html);
+            $("#reply_content_containter").show();
+            $('#to-comment-form').addClass('active');
+            //显示评论表单
+            $('.chat-wrapper').addClass('chat-wrapper');
+            $('.chat-wrapper').addClass('is-open pullUp');
+            $('html').animate({scrollTop: $("#comment_form").offset().top - 60}, 300, function () {
+                CKEDITOR.instances['id_text'].focus();
+            });
+
+        } catch (err) {
+            console.log('open')
+            $('#login_modal').modal('show');
+        }
+
+
+    };
+
+    function likeChange(obj, content_type, object_id) {
+        var is_like = obj.getElementsByClassName('active').length == 0;
+        $.ajax({
+            url: '{%  url 'like_change' %}',
+            type: 'GET',
+            data: {
+                content_type: content_type,
+                object_id: object_id,
+                is_like: is_like,
+            },
+            cache: false,
+            success: function (data) {
+                console.log(data)
+                if (data['status'] == 'SUCCESS') {
+                    //更新点赞状态
+                    var element = $(obj.getElementsByClassName('zmdi-thumb-up'));
+                    if (is_like) {
+                        element.addClass('active');
+                        if(content_type=='blog'){
+                            //更新大的
+                        $('.zmdi-thumb-up-title').addClass('active');
+                        //更新小的
+                        $('.zmdi-thumb-up-blog').addClass('active');
+                        }
+
+                    } else {
+                        element.removeClass('active');
+                         if(content_type=='blog'){
+                        //更新大的
+                        $('.zmdi-thumb-up-title').removeClass('active');
+                        //更新小的
+                        $('.zmdi-thumb-up-blog').removeClass('active');}
+                    }
+                    //更新点赞数量
+                    var like_num = $(obj.getElementsByClassName('like_num'));
+                    like_num.text(data['liked_num']);
+                } else {
+                    if (data['code'] == 400) {
+                        $('#login_modal').modal('show');
+                    } else {
+                        new $.flavr(data['message']);
+                    }
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr)
+            }
+        })
+    }
+    function collectChange(obj, content_type, object_id) {
+        var is_collect = obj.getElementsByClassName('active').length == 0
+        $.ajax({
+            url: '{%  url 'collect_change' %}',
+            type: 'GET',
+            data: {
+                content_type: content_type,
+                object_id: object_id,
+                is_collect: is_collect,
+            },
+            cache: false,
+            success: function (data) {
+                console.log(data)
+                if (data['status'] == 'SUCCESS') {
+                    //更新收藏状态
+                    var element = $(obj.getElementsByClassName('collect_status'));
+                    //中心收藏状态数量变化设置
+                    var element_public=$('.collect_status')
+
+                    if (is_collect) {
+                        element.addClass('active');
+                        element_public.addClass('active')
+                         new $.flavr("添加收藏!")
+                    } else {
+                        element.removeClass('active');
+                        element_public.removeClass('active');
+                         new $.flavr("取消收藏成功!");
+
+                    }
+                    //更新收藏数量
+                    var collect_num = $(obj.getElementsByClassName('collect_num'));
+                    var collect_num_public=$('.collect_num')
+
+                    collect_num.text(data['collect_num']);
+                    collect_num_public.text(data['collect_num']);
+                } else {
+                    if (data['code'] == 400) {
+                        $('#login_modal').modal('show');
+                    } else {
+                        new $.flavr(data['message']);
+
+                    }
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr)
+            }
+        })
+    }
+    function delete_comment(pk,b) {
+        new $.flavr({
+        content: 'Are you sure',
+        dialog : 'confirm',
+        onConfirm : function( ){
+            $.ajax({
+               url:'{% url 'delete_comment' %}',
+               type:'POST',
+               data:{
+                   pk:pk
+               },
+
+                cache:false,
+                success:function (data) {
+                    if(data['status']=='SUCCESS'){
+                        var html01='删除成功'
+                        new $.flavr({content: html01,autoclose:true,timeout:1000})
+                        $(b+pk).remove();
+                    }else{
+                        var html02='操作失败'
+                        new $.flavr({content: html02,autoclose:true,timeout:1000});
+                    }
+                },
+                complete:function (xhr) {
+                    xhr=null;
+                }})
+            return false;
+        }
+        ,autoclose:true,timeout:4000
+    });
+
+    };
+
+
+
+    </script>
+    <script>
+        //设置单个文章导航栏标题变化
+        var scrollFunc = function(e) {
+    e = e || window.event;
+    if (e.wheelDelta) { //判断浏览器IE，谷歌滑轮事件
+        if (e.wheelDelta > 0) { //当滑轮向上滚动时
+            console.log("滑轮向上滚动");
+            $('.deatail-blog-btitle').slideUp('200');
+            $('.show-zmdi').hide('slow','linear');
+        }
+        if (e.wheelDelta < 0) { //当滑轮向下滚动时
+            console.log("滑轮向下滚动");
+           $('.deatail-blog-btitle').slideDown('200')
+            $('.show-zmdi').show('slow','linear');
+
+        }
+    } else if (e.detail) { //Firefox滑轮事件
+        if (e.detail > 0) { //当滑轮向上滚动时
+            console.log("滑轮向上滚动");
+            $('.deatail-blog-btitle').hide('slow','linear');
+
+        }
+        if (e.detail < 0) { //当滑轮向下滚动时
+            console.log("滑轮向下滚动");
+            $('.deatail-blog-btitle').show('slow','linear')
+
+        }
+    }
+}
+//给页面绑定滑轮滚动事件
+if (document.addEventListener) { //firefox
+    document.addEventListener('DOMMouseScroll', scrollFunc, false);
+}
+//滚动滑轮触发scrollFunc方法  //ie 谷歌
+window.onmousewheel = document.onmousewheel = scrollFunc;
+
+    </script>
+{% endblock %}

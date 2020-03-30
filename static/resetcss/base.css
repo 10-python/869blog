@@ -1,0 +1,54 @@
+p.text-danger{
+    margin-bottom: 0px!important;
+}
+.modal-backdrop{
+    z-index: 20!important;
+}
+#login_modal{
+    z-index: 200!important;
+}
+.modal-body{
+    padding: 20px 30px 8px!important;
+}
+.modal-content .modal-header button {
+    top: 16px!important;
+}
+.modal-content {
+   background-color: lavender;
+    color: blueviolet;
+    border: 3px;
+    box-shadow: none;
+    font-size: 0.9em;
+    top: 112px;
+}
+.modal-backdrop {
+    background: rgb(0, 0, 0);
+}
+.modal-dialog{
+    width:auto;
+    max-width: 300px;
+    margin: auto;
+}
+#register_form_modal>.modal-body>.form-row>input,#login_form_modal>.modal-body>.form-row>input{
+    border: none;
+    background-color: white;
+}
+.btn-login100,.btn-register{
+    background-color: #f44a56;
+    margin-right: 20px;
+    margin-top: 10px;margin-bottom: 20px;
+    float: right;
+}
+.btn-login100:hover,.btn-forget100:hover,.btn-register:hover,.btn-sendcode{
+    background-color: #3e4b5d
+}
+.btn-forget100,.btn-sendcode{
+    background-color: #ffd100;
+    margin-left: 20px;
+    margin-top: 10px;margin-bottom: 20px;
+    float: left;
+}
+.text-danger{
+    text-align: center!important;
+}
+

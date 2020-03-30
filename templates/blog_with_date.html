@@ -1,0 +1,5 @@
+{% extends 'blog_with_type.html' %}
+{% load staticfiles %}
+{% block about %}
+    <h2><strong>关于<a class="btn btn-raised btn-primary btn-simple btn-round">{{ year }}年{{ month }}月</a>,共有{{ all_num }}篇</strong></h2>
+{% endblock %}

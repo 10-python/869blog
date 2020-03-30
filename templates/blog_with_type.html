@@ -1,0 +1,96 @@
+{% extends 'blog2.html' %}
+{% load staticfiles %}
+{% load comment_tags %}
+{% load likes_tags %}
+{% load qq_tags %}
+{% load get_blog_avatar %}
+{% block center-block %}
+    <section class="content">
+    <div class="block-header">
+        <div class="row">
+            <div class="col-lg-7 col-md-6 col-sm-12">
+                <h2>宇航员的个人博客 <small>"直到有一天他向我跑来,叫住了我的名字, 那一刻,我漫长的等待结束了。"</small></h2>
+            </div>
+            <div class="col-lg-5 col-md-6 col-sm-12">
+                <ul class="breadcrumb float-md-right">
+                    <li class="breadcrumb-item"><a href="{% url 'blog' %}"><i class="zmdi zmdi-home"></i> home</a></li>
+                    <li class="breadcrumb-item active">type</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container-fluid">
+        <div class="row">
+                     <div class="col-lg-12 col-md-12  col-sm-12">
+                        <div class="card">
+                            <div class="header">
+                                {% block about %}
+                                <h2><strong>关于<a class="btn btn-raised btn-primary btn-simple btn-round">{{ type }}</a>共有{{ all_num }}篇</strong></h2>
+                                {% endblock %}
+                            </div>
+                        </div>
+                     </div>
+                    {% for blog in blogs %}
+                     <div class="col-lg-3 col-md-6 col-sm-12">
+                         <a href="{% url 'blog_detail' blog.pk %}">
+                        <div class="card project_widget">
+                                <div class="pw_img reset-pw-img">
+                                    {%  if blog.avatar %}
+                                <img class="img-fluid" src="{{ blog.avatar.url }}" alt="About the image">
+                                    {% else %}
+                                 <img class="img-fluid" src="{% static 'assets/images/mylog.png' %}" alt="About the image">
+                                    {% endif %}
+                            </div>
+                            <div class="pw_content">
+                                <div class="pw_header">
+                                    <h6>{{ blog.title }}</h6>
+                                    <small class="text-muted">{{ blog.blog_type }}|{{ blog.created_time|date }}</small>
+                                </div>
+                                <div class="pw_meta">
+                                    <li class="badge badge-success">收藏<span>{% get_collect_count blog %}</span></li>
+                                    <li class="badge badge-success">评论<span>{% get_comment_count blog %}</span> </li>
+                                     <li  class="badge badge-success">点赞<span>{% get_likes_count blog %}</span></li>
+                                    <li class="badge badge-success ">阅读量<span>{{ blog.get_read_num}}</span> </li>
+                                </div>
+                            </div>
+                        </div></a>
+                    </div>
+                    {% endfor %}
+
+        </div>
+         <!--分页器-->
+        {% if not all_num.count == 0 %}
+        <div class="row clearfix">
+            <div class="col-lg-12 col-md-4 col-sm-3">
+              <div class="card">
+                    <div class="body">
+                        <ul class="pagination pagination-primary m-b-0">
+                            {% if page_of_blogs.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_of_blogs.previous_page_number }}"><i class="zmdi zmdi-arrow-left"></i></a></li>
+                             {% endif %}
+                             {% for page_num in page_range %}
+                                {% if page_num == current_page_num %}
+                                    <li class="page-item active"><a class="page-link">{{ page_num }}</a></li>
+                                {% else %}
+                                    {% if page_num == '...' %}
+                                             <li class="page-item"><a class="page-link">...</a></li>
+                                    {% else %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a></li>
+                                     {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                              {% if page_of_blogs.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page={{  page_of_blogs.next_page_number }}"><i class="zmdi zmdi-arrow-right"></i></a></li>
+                             {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+         {% endif %}
+    </div>
+</section>
+{% endblock %}
+{% block script_area %}{% endblock %}
+
+

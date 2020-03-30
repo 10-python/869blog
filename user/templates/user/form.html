@@ -1,0 +1,64 @@
+{% extends "information.html" %}
+{% load staticfiles %}
+{% block center-block %}
+<section class="content">
+    <div class="block-header">
+            <div class="row">
+                <div class="col-lg-7 col-md-6 col-sm-12">
+                    <h2>宇航员的个人博客 <small>"直到有一天他向我跑来,叫住了我的名字, 那一刻,我漫长的等待结束了。"</small></h2>
+                </div>
+                <div class="col-lg-5 col-md-6 col-sm-12">
+                    <ul class="breadcrumb float-md-right">
+                        <li class="breadcrumb-item"><a href="{% url 'blog' %}"><i class="zmdi zmdi-home"></i> home</a></li>
+                        {% if request.user.is_authenticated %}
+                        <li class="breadcrumb-item "><a href="{% url 'user_info' %}">个人空间</a></li>
+                        {% endif %}
+                        <li class="breadcrumb-item active">修改密码</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    <div class="container-fluid">
+          <div class="row clearfix">
+            <div class="col-lg-7 col-md-7 col-sm-12">
+                <div class="card">
+                    <div class="header">
+                        <h2><strong>重置</strong> 密码</h2>
+                    </div>
+                    <div class="body">
+                        <form class="form-horizontal" method="POST" >
+                            {% csrf_token %}
+                            {% for feild in form %}
+                                 <div class="row clearfix">
+                                        <div class="col-lg-2 col-md-2 col-sm-4 form-control-label">
+                                            {% if not feild.is_hidden %}
+                                            <label for="{{ feild.id_for_label }}">{{ feild.label }}</label>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-lg-10 col-md-10 col-sm-8">
+                                            <div class="form-group " style="margin-bottom: 1px">
+                                                {{ feild }}
+                                                <p class="text-danger field-error" style="min-height: 5px">{{ feild.errors.as_text }}</p>
+                                            </div><p  id="tip" class=" text-danger" style="min-height: 5px;">{{ form.non_field_errors }}</p>
+
+                                        </div>
+                                 </div>
+
+                            {% endfor %}
+                        <div class="row clearfix">
+                            <div class="col-lg-2 col-md-2 col-sm-4 form-control-label"></div>
+                            <div class="col-lg-10 col-md-10 col-sm-8">
+                                    {% block other_button %}{% endblock %}
+                                 <input type="submit" value="{{ submit_text }}" class="btn btn-raised btn-primary btn-round waves-effectf " id="submit_forget_form">
+                            </div>
+                        </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

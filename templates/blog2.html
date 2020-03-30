@@ -1,0 +1,860 @@
+{% load staticfiles %}
+{% load comment_tags %}
+{% load get_blog_avatar %}
+{% load likes_tags %}
+{% load comment_tags %}
+{% load qq_tags %}
+{% load notifications_tags %}
+<!doctype html>
+<html class="no-js " lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=Edge">
+<meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+<meta name="description" content="Responsive Bootstrap 4 and web Application ui kit.">
+<title>宇航员/个人博客网站</title>
+<link rel="icon" href="{% static 'assets/images/mylog.png' %}" type="image/x-icon">
+<link rel="stylesheet" href="{% static 'assets/plugins/bootstrap/css/bootstrap.min.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/main.css' %}">
+<!--blog-list-css-->
+<link rel="stylesheet" href="{% static 'assets/css/ecommerce.css' %}">
+<link rel="stylesheet" href="{% static 'assets/css/color_skins.css'%}"></head>
+<link rel="stylesheet" type="text/css" href="{% static 'flavr/css/animate.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'flavr/css/flavr.css' %}" />
+<link rel="stylesheet" type="text/css" href="{% static 'resetcss/base.css' %}">
+<script type="text/javascript" src="{% static "ckeditor/ckeditor-init.js" %}"></script>
+<script type="text/javascript" src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
+<style>
+    .carousel-item{
+        max-height: 360px;
+        height: 360px;
+        overflow: auto;
+    }
+    .carousel-item>.carousel-caption>h3{
+        background-color: #8a97dd54;
+        font-weight: bold;
+    color: white;
+    }
+     .carousel-item>.carousel-caption>p{
+        color: #ec3b57 !important
+    }
+    .carousel-item>.carousel-caption>h3>a{
+        color: white;
+        font-weight: bold;
+    }
+</style>
+<body class="theme-purple ">
+<!-- Page Loader -->
+<div class="page-loader-wrapper">
+    <div class="loader">
+        <div class="m-t-30"><img class="zmdi-hc-spin" src="{% static 'assets/images/yhy.png' %}" width="70" height="70" alt="869"></div>
+        <p>Please wait...</p>
+    </div>
+</div>
+<!-- Overlay For Sidebars -->
+<div class="overlay"></div>
+<!-- Top Bar -->
+
+<nav class="navbar p-l-5 p-r-5 ">
+    <ul class="nav navbar-nav navbar-left">
+        <li>
+            <div class="navbar-header">
+                <a href="javascript:void(0);" class="bars"></a>
+                <a class="navbar-brand" href="{% url 'blog' %}"><img src="{% static 'assets/images/mylog.png' %}" width="30" alt="869"><span class="m-l-10">B69</span></a>
+            </div>
+        </li>
+        <li><a href="javascript:void(0);" class="ls-toggle-btn" data-close="true"><i class="zmdi zmdi-swap"></i></a></li>
+        {% if not user.is_authenticated %}
+        <!--未登陆-->
+            <li class="float-right"> <a  class="mega-menu" data-close="true" title="login" onclick="open_form()"><i class="zmdi  zmdi-sign-in"></i></a></li>
+        {% else %}
+        <!--登录-->
+              <!--消息-->
+            {% if mesg_num %}
+            <li class="dropdown" >
+                <a role="button" title="有消息" href="{%  url 'user_info' %}"><span class="col-red"><strong>{{ mesg_num }}</strong></span><i class="zmdi zmdi-email"></i>
+                <div class="notify">
+                    <span class="heartbit"></span>
+                    <span class="point"></span>
+                </div>
+                </a></li>
+            {% endif %}
+            <li class="float-right" title="个人空间"><a href="{% url 'user_info' %}"><i class="zmdi zmdi-account"></i></a></li>
+            <li class="float-right" title="退出"><a href="{% url 'logout' %}"><i class="zmdi zmdi-arrow-out"></i></a></li>
+        {% endif %}
+
+        <!--联系data-toggle="modal" data-target="#contact"-->
+        <li><a title="Contact" onclick="open_contact100();"><i class="zmdi zmdi-email-open"></i></a></li>
+        <!--搜索-->
+        <li class="hidden-sm-down">
+             <form action="{% url 'blog' %}?search={{ search }}">
+            <div class="input-group">
+                <input type="text" class="form-control" name="search" placeholder="Search...">
+                <button class="input-group-addon" type="submit">
+                    <i class="zmdi zmdi-search"></i>
+                </button>
+            </div>
+              </form>
+        </li>
+
+        <!--设置-->
+        <li class="float-right">
+            <a href="javascript:void(0);" class="js-right-sidebar" data-close="true"><i class="zmdi zmdi-settings zmdi-hc-spin"></i></a>
+        </li>
+       {% block title %}{% endblock %}
+    </ul>
+</nav>
+
+<!-- Left Sidebar 推荐-->
+{% block leftsidebar %}
+<aside id="leftsidebar" class="right-sidebar sidebar">
+    <ul class="nav nav-tabs">
+        <li class="nav-item"></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane slideLeft active" id="activity">
+            <div class="slim_scroll">
+                <div class="card">
+                    <h6><a onclick="open_from_01()">热门博客推荐</a></h6>
+                    <ul class="list-unstyled activity">
+                        {% for blog in hot_blogs %}
+                        <li>
+                            <a  href="{% url 'blog_detail' blog.object_id %}">
+                                <i class="zmdi zmdi-fire l-blush"></i>
+                                <div class="info">
+                                    <h4>{{ blog.content_object |truncatechars:'5' }}...</h4>
+                                    <small>{{ blog.read_num }}</small>
+                                </div>
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="card">
+                    <h6>博客分类</h6>
+                    <ul class="list-unstyled activity">
+                        {% for blog_type in blogs_type %}
+                        <li>
+                            <a href="{% url 'blog_with_type' blog_type.id %}">
+                                <i class="zmdi zmdi-label l-parpl"></i>
+                                <div class="info">
+                                    <h4>{{ blog_type }}</h4>
+                                    <small>{{ blog_type.blogs_count }}</small>
+                                </div>
+                            </a>
+                        </li>
+                         {%  endfor %}
+                    </ul>
+                </div>
+                <div class="card">
+                    <h6><a onclick=open_from02()>日期归档</a></h6>
+                    <ul class="list-unstyled activity">
+                        {% for blog_date in blogs_dates %}
+                        <li>
+                            <a href="{% url 'blog_with_date' blog_date.year blog_date.month %}">
+                                <i class="zmdi zmdi-sort l-blue"></i>
+                                <div class="info">
+                                    <h4>{{ blog_date|date:"Y年m月" }}</h4>
+                                    <small>{% get_num_for_date blog_date|date:"Y"  blog_date|date:"m"%}</small>
+
+                                </div>
+                            </a>
+                        </li>
+                         {% endfor %}
+                    </ul>
+                </div>
+             </div>
+    </div>
+</aside>
+{% endblock %}
+<!-- Right Sidebar 菜单设置-->
+{% block rightsidebar %}
+<aside id="rightsidebar" class="right-sidebar">
+    <ul class="nav nav-tabs">
+        <li class="nav-item"></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane stretchLeft active" id="user">
+            <div class="menu">
+                <ul class="list">
+                    <li>
+                        <div class="user-info m-b-20 p-b-15">
+                            <div class="image"><a ><img src="{% static 'assets/images/mylog.png' %}" alt="User"></a></div>
+                            <div class="detail">
+                                <h4>宇航员个人博客</h4>
+                                <small>我是小小宇航员</small>
+                            </div>
+                            <p class="text-muted">宇航员个人博客网站</p>
+                            <div class="row">
+                                <div class="col-4">
+                                    <a title="qq" class="qq"><i class="zmdi zmdi-account"></i></a>
+                                    <small>QQ</small>
+                                </div>
+                                <div class="col-4">
+                                    <a title="twitter" class="weixin"><i class="zmdi zmdi-chart"></i></a>
+                                    <small>WEIXIN</small>
+                                </div>
+                                <div class="col-4">
+                                   <a title="email" class="email"><i class="zmdi zmdi-email"></i></a>
+                                    <small>EMAIL</small>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    <li>
+                        <small class="text-muted">Email address: </small>
+                        <p>1765300685@qq.com</p>
+                        <hr>
+                        <small class="text-muted">Phone: </small>
+                        <p>17784777355</p>
+                        <hr>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</aside>
+{% endblock %}
+<!--block main-center-->
+{% block center-block %}
+<section class="content ecommerce-page">
+    <div class="block-header">
+        <div class="row">
+            <div class="col-lg-7 col-md-6 col-sm-12">
+                <h2 id="top100">宇航员的个人博客 <small>"直到有一天他向我跑来,叫住了我的名字, 那一刻,我漫长的等待结束了。"</small></h2>
+            </div>
+            <div class="col-lg-5 col-md-6 col-sm-12">
+                <ul class="breadcrumb float-md-right">
+                    <li class="breadcrumb-item active"><a href="{% url 'blog' %}"><i class="zmdi zmdi-home"></i> home</a></li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="container-fluid">
+        <div class="row clearfix">
+            <div class="col-md-12 col-lg-3">
+                    <div class="card activities card-scroll" style="height:400px;max-height: 400px;overflow: auto">
+                        <div class="header">
+                            <h2><div class="read-list">
+                                <ul class="nav ">
+                                 <li href="javascript:void(0);" class="nav-item">今日榜单</li>/
+                                <li href="javascript:void(0);" class="nav-item">昨日榜单</li>/
+                                <li href="javascript:void(0);" class="nav-item active ">周榜</li>
+                                </ul>
+
+                            </div>
+                            </h2>
+                        </div>
+                        <div class="body">
+                            <!--today-->
+                            <ul class="list-unstyled activity  read-content-item set-hidden">
+                                {% for i in get_today_hot_blog %}
+                                <li>
+                                    <a href="{% url 'blog_detail' i.object_id %}">
+                                        <i class="zmdi zmdi-fire l-parpl"></i>
+                                        <div class="info">
+                                            <h4>{{ i.content_object|truncatechars:'12' }}...</h4>
+                                            <small>{{ i.read_num }}</small>
+                                        </div>
+                                    </a>
+                                </li>
+                                    {% empty %}
+                                    <li>
+                                        <div class="info" style="background-image:url('{% static 'assets/images/yhy.png' %}');background-size: cover;height: 235px">
+                                            <h4>今日阅读数0</h4>
+
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <!--yesterday-->
+                            <ul class="list-unstyled activity read-content-item set-hidden">
+                                {% for i in get_yesterday_hot_blog %}
+                                <li>
+                                    <a href="{% url 'blog_detail' i.object_id %}">
+                                        <i class="zmdi zmdi-fire l-salmon"></i>
+                                        <div class="info">
+                                            <h4>{{ i.content_object|truncatechars:'12' }}...</h4>
+                                            <small>{{ i.read_num }}</small>
+                                        </div>
+                                    </a>
+                                </li>
+                                    {% empty %}
+                                      <li>
+                                        <div class="info" style="background-image:url('{% static 'assets/images/yhy.png' %}');background-size: cover;height: 235px">
+                                            <h4>昨日阅读数0</h4>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <!--week-->
+                            <ul class="list-unstyled activity read-content-item ">
+                                {% for i in get_week_hot_blog %}
+                                <li>
+                                    <a href="{% url 'blog_detail' i.id %}">
+                                        <i class="zmdi zmdi-fire bg-blush"></i>
+                                        <div class="info">
+                                            <h4>{{ i.title|truncatechars:'12' }}...</h4>
+                                            <small>{{ i.read_num_sum }}</small>
+                                        </div>
+                                    </a>
+                                </li>
+                                    {% empty %}
+                                      <li>
+                                        <div class="info" style="background-image:url('{% static 'assets/images/yhy.png' %}');background-size: cover;height: 235px">
+                                            <h4>本周阅读数0</h4>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+            </div>
+            <div class="col-md-12 col-lg-6">
+                <div class="card">
+                    <div class="body">
+                    <div id="demo2" class="carousel slide" data-ride="carousel">
+                        <!-- Indicators -->
+                        <ul class="carousel-indicators">
+                            <li data-target="#default100}" data-slide-to="d100" class="active"></li>
+                             {% for blog in hot_blogs %}
+                             {%  get_blog_avatar_url blog as e %}
+                            {% if e %}
+                        <li data-target="#demo{{ blog.pk }}" data-slide-to="{{ blog.pk }}" class="" ></li>
+                            {% endif %}
+                            {% endfor %}
+                        </ul>
+
+                        <!-- Wrapper for slides -->
+                      <div class="carousel-inner" >
+                       <div class="carousel-item active" >
+                            <img src="{% static 'assets/images/mylog.png' %}" class="img-fluid "   alt="">
+                            <div class="carousel-caption">
+                            <h3>热门博客推荐</h3>
+                            <p>.....</p>
+                            </div>
+                        </div>
+                      {% for blog in hot_blogs %}
+                        {%  get_blog_avatar_url blog as e %}
+                        {% if e %}
+                        <div class="carousel-item">
+                            <img src="{{ e }}" class="img-fluid" alt="">
+                            <div class="carousel-caption">
+                            <h3><a href="{% url 'blog_detail' blog.object_id %}">{{ blog.content_object }}</a></h3>
+                            <p>{% get_blog_for_hotblog blog as b %}{{ b.content|truncatechars:'40'|safe|striptags }}...</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                     {% endfor %}
+                        </div>
+                        <!-- Controls -->
+                        <!-- Left and right controls -->
+                        <a class="carousel-control-prev" href="#demo2" data-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                        </a>
+                        <a class="carousel-control-next" href="#demo2" data-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                        </a>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-12">
+                <div class="card picture-card" style="max-height: 400px;overflow: auto">
+                    <div class="body">
+                        <div class='picture' id="picture" style="width: 100%;"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+        <div class="row clearfix">
+           {% if search %}
+           <div class="col-lg-12 col-md-12  col-sm-12">
+            <div class="card">
+                <div class="header">
+                    {% block about %}
+                    <h2><strong>关于"关键字":<a class="btn btn-raised btn-primary btn-simple btn-round">{{ search }}</a>共有{{ search_num }}篇</strong></h2>
+                    {% endblock %}
+                </div>
+            </div>
+          </div>
+            {% endif %}
+            {% for blog in blogs %}
+                     <div class="col-lg-3 col-md-6 col-sm-12">
+                         <a href="{% url 'blog_detail' blog.pk %}">
+                        <div class="card project_widget">
+                                <div class="pw_img reset-pw-img">
+                                    {%  if blog.avatar %}
+                                <img class="img-fluid" src="{{ blog.avatar.url }}" alt="About the image">
+                                    {% else %}
+                                 <img class="img-fluid" src="{% static 'assets/images/mylog.png' %}" alt="About the image">
+                                    {% endif %}
+                            </div>
+                            <div class="pw_content">
+                                <div class="pw_header">
+                                    <h6>{{ blog.title }}</h6>
+                                    <small class="text-muted">{{ blog.blog_type }}|{{ blog.created_time|date }}</small>
+                                </div>
+                                <div class="pw_meta">
+                                    <li class="badge badge-default">收藏{% get_collect_count blog %}</li>
+                                    <li class="badge badge-default">评论{% get_comment_count blog %} </li>
+                                     <li  class="badge badge-default">点赞{% get_likes_count blog %}</li>
+                                    <li class="badge badge-default ">阅读量{{ blog.get_read_num}} </li>
+                                </div>
+                            </div>
+                        </div></a>
+                    </div>
+            {% endfor %}
+        </div>
+         <!--分页器-->
+        {% if not all_num.count == 0 %}
+        <div class="row clearfix">
+            <div class="col-lg-12 col-md-4 col-sm-3">
+              <div class="card">
+                    <div class="body">
+                        <ul class="pagination pagination-primary m-b-0">
+                            {% if page_of_blogs.has_previous %}
+                            <li class="page-item"><a class="page-link" href="?page={{ page_of_blogs.previous_page_number }}"><i class="zmdi zmdi-arrow-left"></i></a></li>
+                             {% endif %}
+                             {% for page_num in page_range %}
+                                {% if page_num == current_page_num %}
+                                    <li class="page-item active"><a class="page-link">{{ page_num }}</a></li>
+                                {% else %}
+                                    {% if page_num == '...' %}
+                                             <li class="page-item"><a class="page-link">...</a></li>
+                                    {% else %}
+                                            <li class="page-item"><a class="page-link" href="?page={{ page_num }}">{{ page_num }}</a></li>
+                                     {% endif %}
+                                {% endif %}
+                            {% endfor %}
+                              {% if page_of_blogs.has_next %}
+                            <li class="page-item"><a class="page-link" href="?page= {{ page_of_blogs.next_page_number }}"><i class="zmdi zmdi-arrow-right"></i></a></li>
+                             {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+         {% endif %}
+    </div>
+</section>
+{% endblock %}
+<!--登录注册联系表单模态框-->
+ <div class="container">
+    <div class="row">
+        <div class="modal fade" id="contact">
+            <div class="modal-dialog">
+            <div class="modal-content" style="border:none">
+              <div class="modal-header" style="background-color: #6c62ff">
+                <h5 class="modal-title " style="color: white;padding-bottom: 10px">Contact
+                <button type="button" class="close" data-dismiss="modal">&times;</button></h5>
+              </div>
+              <div class="modal-body">
+                      <form id="contactform" role="form" class="myForm" >
+                     {% csrf_token %}
+                     <div class="form-group">
+                        <input type="text" class="form-control" id="name" placeholder="Name">
+                     </div>
+                     <div class="form-group">
+                        <input type="email" class="form-control" id="email" placeholder="Email">
+                     </div>
+                     <div class="form-group">
+                        <textarea class="form-control" id="message" rows="10" placeholder="Message"></textarea>
+                     </div>
+                    <button type="button" class="btn btn-submit btn-login100 float-right" onclick="contact();">发送</button>
+                </form>
+              </div>
+            </div>
+            </div>
+            </div>
+    </div>
+</div>
+ {% if not user.is_authenticated %}
+ <div class="container">
+    <div class="row">
+        <div class="modal fade " id="login_modal" tabindex="1" role="dialog">
+            <div class="modal-dialog " role="document">
+                <div class="modal-content animated flipInX" >
+                     <form id="login_form_modal" class="login_panel" action="" method="POST">
+                        <div class="modal-header">
+                             <h6 class="modal-title">
+                                 <span class="active">LOGIN</span>&nbsp;/&nbsp;<span onclick="$('#register_form_modal').show();$('#login_form_modal').hide()"style="color: cornflowerblue">REGISTER</span>
+                             </h6>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></h6>
+                        </div>
+                        <div class="modal-body">
+                            {% csrf_token %}
+                            {% for feild in login_form %}
+                             <div class="form-row">   <label for="{{ feild.id_for_label }}">{{ feild.label }}</label>
+                                 {{ feild }}</div>
+                                <span class="text-danger" style="font-weight: bold">{{ feild.errors.as_text }}</span>
+                            {% endfor %}
+
+                        </div>
+                        <div id="login_modal_tip" class="text-danger" style="padding: 0 5%;font-weight: bold"></div>
+                         <a  class="btn btn-forget100 float-left" href="{% url 'forget_password' %}">forget</a>
+                            <button type="submit" class="btn btn-login100 float-right">LOGIN</button>
+
+                    </form>
+                     <form id="register_form_modal" class="register_panel " method="POST" style="display: none">
+                        <div class="modal-header" >
+                            <h6 class="modal-title"><span class="active">REGISTER</span>&nbsp;/&nbsp;<span onclick="$('#login_form_modal').show();$('#register_form_modal').hide()" style="color:cornflowerblue">LOGIN</span>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button></h6>
+                        </div>
+                        <div class="modal-body" >
+                            {% csrf_token %}
+                            {% for feild in register_form %}
+                                {% if not feild.is_hidden %}
+                               <div class="form-row"> <label for="{{ feild.id_for_label }}">{{ feild.label }}</label>
+                                {% endif %}
+                            {{ feild }}</div>
+                                 <p class="text-danger {{ feild.id_for_label }}" style="font-weight: bold">{{ feild.errors.as_text }}</p>
+                            {% endfor %}
+                         <span class="text-danger" style="font-weight: bold"></span>
+                        </div>
+                            <span id="register-tip" class="text-danger" style="font-weight: bold"></span>
+                            <div class="clearfix"></div>
+                             <button id="send_code" class="btn   btn-sendcode float-left "  disabled="disabled">发送验证码</button>
+                            <button type="submit" class="btn  btn-register float-right">REGISTER</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+<a href="#top" class="top100"></a>
+<!-- Jquery Core Js -->
+<script src="{% static 'assets/bundles/libscripts.bundle.js' %}"></script>
+<script src="{% static 'assets/bundles/vendorscripts.bundle.js' %}"></script>
+<script src="{% static 'assets/bundles/knob.bundle.js' %}"></script>
+<script src="{% static 'flavr/js/flavr.js' %}"></script>
+<script src="{% static 'assets/bundles/mainscripts.bundle.js' %}"></script>
+<script src="http://cdn.highcharts.com.cn/highcharts/highcharts.js"></script>
+<script src="https://cdn.bootcss.com/layer/2.3/layer.js"></script>
+<script src="{% static 'resetcss/scrolltopcontrol.js' %}"></script><!--scrolltop-->
+
+
+<style>
+
+
+.top100 {
+    position: fixed;
+    bottom: 87px;
+    right: 20px;
+    height: 80px;
+    width: 78px;
+    z-index: 1000;
+    background-image: url("{% static 'assets/images/yhy.png' %}");
+    background-size: cover;
+    color: #fff;
+    -webkit-border-radius: 50%;
+    -moz-border-radius: 50%;
+    -ms-border-radius: 50%;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 6px rgb(169, 160, 123), 0 6px 12px rgb(168, 177, 196);
+}
+</style>
+<script>
+       //切换榜单
+       $('.read-list li').each(
+           function () {
+               $(this).click(function () {
+                   //设置active
+                   var index=$('.read-list li').index($(this));
+                   $(".read-list li").removeClass('active');
+                   $(this).addClass('active');
+                   //切换内容
+                   $('.read-content-item').hide();
+                   $('.read-content-item:eq('+ index+')').show();
+               })
+           }
+       )
+         function open_form() {
+               $("#login_modal").modal('show');
+         }
+        $("#login_form_modal").submit(function () {
+            event.preventDefault();
+            $.ajax({
+                url: '{% url "login_for_modal"%}',
+                type: 'POST',
+                data: $(this).serialize(),
+                async:false,
+                caches: false,
+                success: function (data) {
+                    if (data['status'] == "SUCCESS") {
+                        window.location.reload();
+                    } else {
+                        $('#login_modal_tip').text("用户名或者密码不正确!")
+                    }
+                },
+                complete:function (XHR,TS) {
+                    XHR=null;
+                }
+            });
+        })
+        $("#send_code").click(function () {
+            var email=$("#register_email").val();
+            console.log(email)
+            if(email==""){
+                $(".register_email").text('* 邮箱不能为空');
+                return false;
+            }
+            //发送验证码
+            $.ajax({
+                    url:"{% url 'send_verification_code' %}",
+                    type:"GET",
+                    data:{
+                        'email':email,
+                        'send_for':'register_code',
+                    },
+                    cache:false,
+                    success:function (data) {
+                        if(data['status']!='SUCCESS')
+                        { new $.flavr(data['status']);}
+                    }
+                });
+            //把按钮变灰
+            $(this).addClass('disabled');
+            $(this).attr('disabled',true);
+            var time=30;
+            $(this).text(time+'s');
+            var interval=setInterval(()=> {
+                if(time<=0){
+                    clearInterval(interval);
+                     $(this).removeClass('disabled');
+                     $(this).attr('disabled',false);
+                     $(this).text('发送验证码');
+                     return false;
+                }
+                time--;
+                $(this).text(time+'s');
+            },1000);
+        });
+        //判断前后密码是否一致
+        $(function () {
+            $("#register_pwd_again").blur(function () {
+                newpassword = $('#register_pwd').val();
+                newpassword_agin = $('#register_pwd_again').val();
+                if (newpassword != newpassword_agin) {
+                    $(".register_pwd_again").text('两次密码输入不一致');
+                    //alert('请再次确认密码!'+newpassword_agin+'/'+newpassword)
+                }
+                else if(newpassword==''|newpassword_agin==''){
+                     $('.register_pwd_agin').text('密码不能为空');
+                }else if (newpassword == newpassword_agin) {
+                    $('.register_pwd_again').text('')
+                }
+            })
+        });
+        //判断邮箱是否合法
+        $(function () {
+            $("#register_email").change(function () {
+                email = $('#register_email').val();
+                var correct_email = /^\w{3,}(\.\w+)*@[A-z0-9]+(\.[A-z]{2,5}){1,2}$/;
+                if (email == '') {
+                    $("#register_email").attr('placeholder', '该字段不能为空');
+                } else {
+                    if (correct_email.test(email) == false) {
+                        $('.register_email').text('请输入合法的Email地址');
+                        {#alert('请输入合法的Email地址')#}
+                        $('#send_code').addClass('disabled');
+                        $('#send_code').attr('disabled', true)
+                    } else {
+                        $('.register_email').text('');
+                       // alert($('.register_username').text());
+                           $('#send_code').removeClass('disabled');
+                           $('#send_code').attr('disabled', false);
+                    }
+                }
+
+            })
+        });
+         //检验用户名是否有效
+        $('#register_username').blur(function () {
+            var username=$('#register_username').val()
+            var count=username.split('').length;
+            if(count>30|count<3){
+                console.log('false');
+                $('#register_username').attr('placeholder','该字段不能为空');
+                $('.register_username').text("请输入3到30位的用户名!");
+            }else{
+
+         $.ajax({
+                    url:"{% url 'check_username' %}",
+                    type:"GET",
+                    data:{
+                        'username':username,
+
+                    },
+                    cache:false,
+                    success:function (data) {
+                        if(data['status']=='ERROR') {
+                            $('.register_username').text('用户名已经存在!')
+                        }else{
+                            $('.register_username').text('')
+                        }
+                    },
+                    complete:function (xhr) {
+                        xhr=null;
+                    }
+                });}
+
+        })
+        //进行注册验证
+        $('#register_form_modal').submit(function () {
+            event.preventDefault();
+            var username=$("#register_username").val();
+            var email=$('#register_email').val();
+            var password=$('#register_pwd').val();
+           $.ajax({
+            url:'{% url  'register_ajax'%}',
+            type:'POST',
+            data:$(this).serialize(),
+
+            caches:false,
+            success:function (data) {
+                if (data['status'] == 'SUCCESS') {
+                    //成功
+                    new $.flavr('注册成功')
+                    $('.login_panel').removeClass('hidden');
+                    $('.register_panel').addClass('hidden');
+                } else {
+                    //失败
+                    new $.flavr('操作失败')
+                    var error = data['none'];
+                    new $.flavr(error)
+                } },
+               complete:function (xhr) {
+                xhr=null;
+            }
+        })
+        })
+
+
+    function open_contact100(){
+            var html =' <form id="contactform" role="form" class="myForm" >\n' +
+                '     <div class="form-group">\n' +
+                '        <input type="text" class="form-control" name="name" id="name100" placeholder="Name">\n' +
+                '     </div>\n' +
+                '     <div class="form-group">\n' +
+                '        <input type="email" class="form-control" name="email" id="email100" placeholder="Email">\n' +
+                '        </div>\n' +
+                '        <div class="form-group">\n' +
+                '           <textarea class="form-control" name="message" id="message100"  rows="10" placeholder="点击填写内容!"></textarea>\n' +
+                '        </div>\n' +
+                '   </form>'
+                new $.flavr({
+                    title       : 'Contact',
+                    content     : 'Please contact to continue',
+                    dialog      : 'form',
+                    form        : { content: html, addClass: 'form-html' },
+                    onSubmit    : function( $container, $form ){
+                                    var name=$("#name100").val();
+                                    var email=$('#email100').val();
+                                    var content=$('#message100').val();
+                                    if (name==''|email==''|content==''){
+                                    new $.flavr('表单不能为空');
+                                    return false;
+                                    }
+                                    new $.flavr({ content : '正在提交', autoclose : true})
+                                    $.ajax({
+                                     url:{% url 'contact' %},
+                                     type:'POST',
+                                     data: $form.serialize(),
+
+                                     cache:false,
+                                     success:function (data) {
+                                         if(data['status']=='SUCCESS'){
+                                             //成功发送
+                                             new $.flavr({content:'发送成功',autoclose: true});
+                                             $('#contact').modal('hide');
+                                         }else{
+                                             //发送失败
+                                             new $.flavr(data['status'])
+                                         }
+                                     },
+                                     complete:function (xhr) {
+                                         xhr=null;
+                                     }
+                                    })
+                                            return false;
+                                        }
+                                    });
+                      }
+
+            $('.qq').on('click',function () {
+                 new $.flavr({ title : 'QQ',
+                            content: '<img src="{% static 'code/qq.jpg' %}" style="height:400px">',
+                            buttons : { close: {} }
+                 });
+            })
+            $('.weixin').on('click',function () {
+                 new $.flavr({ title : 'Weixin',
+                            content: '<img src="{% static 'code/weixin.png' %}" style="height:400px">',
+                            buttons : { close: {} }
+                 });
+            })
+             $('.email').on('click',function () {
+                 new $.flavr('1765300685@qq.com');
+            })
+</script>
+
+
+{% block script_area %}
+<script>
+// 图表配置
+var options = {
+chart: {
+type: 'line',
+backgroundColor: 'rgba(0,0,0,0)'
+
+},                              //指定图表的类型，默认是折线图（line）
+title: {text: null},                                // 标题
+xAxis: {
+categories: {{each_date_day_list|safe}},  // x 轴分类
+labels:{
+    style:{
+        color:'#8C99E0',
+        fontWeight:'bold',
+    }
+}
+
+},
+yAxis: {
+title: {text:null}  ,                            // y 轴标题
+labels:{ enabled:false},
+gridLineDashStyle:"Dash",
+},
+series: [{                              // 数据列
+name: '阅读量',                        // 数据列名
+data: {{ read_num_sum_list }},                     // 数据
+marker:{
+    fillColor:'#5CE08C',
+}
+}],
+plotOptions: {
+        line: {
+            dataLabels: {
+                enabled: true
+            }
+        }
+    },//数据标签
+legend:{ enable:false},
+credits:{ enabled: false} ,// 禁用版权信息
+colors: ['#8c88e0','#ED561B', '#DDDF00', '#64E572', '#FF9655']
+
+};
+// 图表初始化函数
+var chart = Highcharts.chart('picture', options);
+</script>
+
+{% endblock %}
+</body>
+</html>
